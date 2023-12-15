@@ -4,16 +4,16 @@ const express = require('express');
 const router = express.Router();
 
 const { 
-    signupUser, loginUser, resetPassword, storeLinkToken, getLinkToken, loginAdmin,
-} =  require('../dbServices/dbAuth');
+     loginUser, resetPassword, storeLinkToken, getLinkToken, loginAdmin, signupUser,
+} =  require('../dbServices/auth');
 // const { sendText } = require('../controllers/sendText');
 // const { generateRandomVerificationCode } = require('../controllers/randomCode');
 // const { authenticateToken } = require('../middleware/authToken');
 // const { storeTokens } = require('../dbServices/dbTokens');
-const { generateAuthToken } = require('../controllers/generateToken');
+const { generateAuthToken } = require('../controllers/auth/generateToken');
 const { getUserDetailsByemail } = require('../dbServices/dbUsers');
-const { sendResetPasswordLink } = require('../controllers/sendResetPasswordLink');
-const { generateResetPasswordLink } = require('../controllers/resetPasswordLink');
+const { sendResetPasswordLink } = require('../controllers/auth/sendResetPasswordLink');
+const { generateResetPasswordLink } = require('../controllers/auth/resetPasswordLink');
 const { authenticateToken } = require('../middlewares/authToken');
 
 router.post('/signup', async (req, res) =>{
@@ -67,6 +67,7 @@ router.post('/login', async (req, res) =>{
     }
 
 });
+
 router.post('/loginadmin', async (req, res) =>{
     const { email, password, loginType} = req.body;
     console.log(req.body)

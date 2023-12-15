@@ -4,15 +4,18 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { left_arrow, register_illus, show_hide, logo } from '../../../assets/images';
 
-import { countries } from 'countries-list'
+import { countries as countriesList } from 'countries-list'
+import { CountriesData, SignupDetails } from './types';
+
+const countries: CountriesData = countriesList;
 
 const Signup = () =>{
     const navigate = useNavigate()
 
-    const [signupDetails, setSignupDetails] = useState({
+    const [signupDetails, setSignupDetails] = useState<SignupDetails>({
         last_name: "", first_name:"",email:"", remember_me: false, country: "US", password: "", phone:""
     })
-    const handleInputChange = (e) =>{
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>{
         console.log(e)
         const name = e.target.name
         const value = e.target.value
@@ -27,7 +30,7 @@ const Signup = () =>{
         setShowPassword(!showPassword);
     };
 
-    const handleSignupDetailsSubmit = (e) =>{
+    const handleSignupDetailsSubmit = (e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault()
         
         console.log(signupDetails);
@@ -61,66 +64,66 @@ const Signup = () =>{
         });
     }
     return(
-        <section class="log-reg register land-pg">
-        <div class="overlay pb-120">
-            <div class="container">
-                <div class="top-head-area">
-                    <div class="row d-flex align-items-center">
-                        <div class="col-sm-5 col">
-                            <Link class="back-home" to='http://localhost:5173/'>
+        <section className="log-reg register land-pg">
+        <div className="overlay pb-120">
+            <div className="container">
+                <div className="top-head-area">
+                    <div className="row d-flex align-items-center">
+                        <div className="col-sm-5 col">
+                            <Link className="back-home" to='http://localhost:5173/'>
                                 <img src={left_arrow} alt="image"/>
                                 Back To World Wire Pay
                             </Link>
                         </div>
-                        <div class="col-sm-5 col">
+                        <div className="col-sm-5 col">
                             <Link to='http://localhost:5173/'>
                                 <img src={logo} alt="image"/>
                             </Link>
                         </div>
                     </div>
                 </div>
-                <div class="row justify-content-center align-items-center ">
-                    <div class="col-md-5">
-                        <div class="img-area">
+                <div className="row justify-content-center align-items-center ">
+                    <div className="col-md-5">
+                        <div className="img-area">
                             <img src={register_illus} alt="image"/>
                         </div>
                     </div>
-                    <div class="col-lg-6 col-md-7 z-1 text-center ">
-                        <div class="form-box">
+                    <div className="col-lg-6 col-md-7 z-1 text-center ">
+                        <div className="form-box">
                             <h4>Register with World Wire Pay</h4>
-                            <p class="alr-acc dont-acc">Already have an account? <Link to='http://localhost:5173/user/login'>Log in now.</Link></p>
-                            {/* <ul class="nav nav-tabs" id="myTab" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="personal-tab" data-bs-toggle="tab"
+                            <p className="alr-acc dont-acc">Already have an account? <Link to='http://localhost:5173/user/login'>Log in now.</Link></p>
+                            <ul className="nav nav-tabs" id="myTab" role="tablist">
+                                <li className="nav-item" role="presentation">
+                                    <button className="nav-link active" id="personal-tab" data-bs-toggle="tab"
                                         data-bs-target="#personal" type="button" role="tab" aria-controls="personal"
                                         aria-selected="true">Personal</button>
                                 </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="business-tab" data-bs-toggle="tab" data-bs-target="#business"
+                                <li className="nav-item" role="presentation">
+                                    <button className="nav-link" id="business-tab" data-bs-toggle="tab" data-bs-target="#business"
                                         type="button" role="tab" aria-controls="business"
                                         aria-selected="false">Business</button>
                                 </li>
-                            </ul> */}
-                            <div class="tab-content" id="myTabContent">
-                                <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
+                            </ul>
+                            <div className="tab-content" id="myTabContent">
+                                <div className="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
                                     <form onSubmit={handleSignupDetailsSubmit} action="#">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <div class="single-input d-flex align-items-center">
+                                        <div className="row">
+                                            <div className="col-6">
+                                                <div className="single-input d-flex align-items-center">
                                                     <input onChange={(e) =>{handleInputChange(e)}} required
                                                     type="text" name="first_name" placeholder="First Name"/>
                                                 </div>
                                             </div>
-                                            <div class="col-6">
-                                                <div class="single-input d-flex align-items-center">
+                                            <div className="col-6">
+                                                <div className="single-input d-flex align-items-center">
                                                     <input onChange={(e) =>{handleInputChange(e)}} required
                                                     type="text" name="last_name" placeholder="Last Name"/>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="single-input d-flex align-items-center">
+                                        <div className="row">
+                                            <div className="col-12">
+                                                <div className="single-input d-flex align-items-center">
                                                     <select style={{width: "100%"}}
                                                     onChange={handleInputChange} name='country' defaultValue="US" >
                                                         <option value="1">Select Your Country</option>
@@ -134,59 +137,58 @@ const Signup = () =>{
                                             </div>
                                         </div>
 
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="single-input d-flex align-items-center">
+                                        <div className="row">
+                                            <div className="col-12">
+                                                <div className="single-input d-flex align-items-center">
                                                     <span style={{paddingRight: "5px"}}>+{countries[signupDetails.country].phone}</span>
                                                     <input onChange={handleInputChange} required
-                                                    type="number" name="phone" class="phoneInput" placeholder="Phone Number">
+                                                    type="number" name="phone" className="phoneInput" placeholder="Phone Number">
                                                     </input>
                                                 </div>
                                             </div>
-                                            <div class="col-12">
-                                                <div class="single-input d-flex align-items-center">
+                                            <div className="col-12">
+                                                <div className="single-input d-flex align-items-center">
                                                     <input onChange={handleInputChange} required
                                                     type="email" name="email" placeholder="Email"/>
                                                 </div>
                                             </div>
-                                            <div class="col-12">
-                                                <div class="single-input d-flex align-items-center">
+                                            <div className="col-12">
+                                                <div className="single-input d-flex align-items-center">
                                                     <input onChange={handleInputChange} required
                                                     type={showPassword ? 'text' : 'password'}
-                                                     name="password" class="passInput" placeholder="Password"/>
+                                                     name="password" className="passInput" placeholder="Password"/>
                                                     <img onClick={toggleShowPassword}
-                                                        class="showPass" src={show_hide} alt="image"/>
+                                                        className="showPass" src={show_hide} alt="image"/>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="remember-forgot d-flex justify-content-between">
-{/*                                             
-                                            <div class="form-group d-flex">
-                                                <div class="checkbox_wrapper" >
+                                        <div className="remember-forgot d-flex justify-content-between">                                          
+                                            <div className="form-group d-flex">
+                                                <div className="checkbox_wrapper" >
                                                     <input onChange={handleInputChange} name='remember_me'
-                                                    checked = {signupDetails.remember_me} class="check-box" id="check1" type="checkbox"/>
+                                                    checked = {signupDetails.remember_me} className="check-box" id="check1" type="checkbox"/>
                                                     <label></label>
                                                 </div>
-                                                <label for="check1"><span class="check_span">Remember Me</span></label>
-                                            </div> */}
-                                            <div class="forget-pw">
+                                                <label htmlFor="check1"><span className="check_span">Remember Me</span></label>
+                                            </div> 
+                                            <div className="forget-pw">
                                                 <Link to="http://localhost:5173/user/forgot-password">Forgot your password?</Link>
                                             </div>
                                         </div>
                                         
-                                        <div class="btn-area">
-                                            <button type="submit" class="cmn-btn">Register Now</button>
+                                        <div className="btn-area">
+                                            <button type="submit" className="cmn-btn">Register Now</button>
                                         </div>
                                     </form>
-                                    {/* <div class="bottom-area">
-                                        <div class="continue"><p>Or continue with</p></div>
-                                        <div class="login-with d-flex align-items-center">
-                                            <Link href="javascript:void(0)"><img src="assets/img/google.png" alt="image"/></Link>
-                                            <Link href="javascript:void(0)"><img src="assets/img/fb.png" alt="image"/></Link>
+                                    <div className="bottom-area">
+                                        <div className="continue"><p>Or continue with</p></div>
+                                        <div className="login-with d-flex align-items-center">
+                                            <Link to="#"><img src="assets/img/google.png" alt="image"/></Link>
+                                            <Link to="#"><img src="assets/img/fb.png" alt="image"/></Link>
                                         </div>
-                                    </div> */}
-                                    <div class="privacy">
-                                        <p>By registering you accept our <Link href="terms-conditions.html">Terms & Conditions</Link> and <Link href="privacy-policy.html">Privacy Policy</Link></p>
+                                    </div>
+                                    <div className="privacy">
+                                        <p>By registering you accept our <Link to="terms-conditions.html">Terms & Conditions</Link> and <Link to="privacy-policy.html">Privacy Policy</Link></p>
                                     </div>
                                 </div>
                                 

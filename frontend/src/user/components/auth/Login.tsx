@@ -6,19 +6,24 @@ import { Link, useNavigate } from "react-router-dom";
 import { left_arrow, logo, show_hide } from '../../../assets/images';
 import { setUserDetails } from '../../../redux/userDetails';
 
-const Login = ({loginType}) =>{
+interface PersonDetails{
+    email: string,
+    password: string,
+}
+
+const Login: React.FC <{loginType: "admin" | "user"}> = ({loginType}) =>{
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
-    const [loginDetails, setLoginDetails] = useState({
+    const [loginDetails, setLoginDetails] = useState<PersonDetails>({
         email:"", password: "",
     })
-    const handleInputChange = (e) =>{
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>{
         const name = e.target.name
         const value = e.target.value
         setLoginDetails((obj) =>({...obj, [name]: value}))
     }
-    const handleLoginDetailsSubmit = (e) =>{
+    const handleLoginDetailsSubmit = (e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault()
         
         // console.log(loginDetails);

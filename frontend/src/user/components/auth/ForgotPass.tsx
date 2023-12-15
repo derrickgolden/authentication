@@ -3,16 +3,19 @@ import { forgot_password_illus, left_arrow, logo } from "../../../assets/images"
 
 import axios from 'axios';
 import { useState } from "react";
+import { PersonDetails } from "./types";
 
-const ForgotPassword = () =>{
-    const [emailDetails, setEmailDetails] = useState({email:""})
+const ForgotPassword: React.FC = () =>{
+    const [emailDetails, setEmailDetails] = useState<PersonDetails>({
+        email:"", password: "", confirm_password: ""
+    })
 
-    const handleInputChange = (e) =>{
-        const value = e.target.value
-        setEmailDetails({email: value})
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>{
+        const value: string = e.target.value;
+        setEmailDetails(emailDetails => ({...emailDetails, email: value}));
     }
-    const handleEmailDetailsSubmit = (e) =>{
-        e.preventDefault()
+    const handleEmailDetailsSubmit = (e: React.FormEvent<HTMLFormElement>) =>{
+        e.preventDefault();
         
         const {password, confirm_password} = emailDetails;
         if(password !== confirm_password){
