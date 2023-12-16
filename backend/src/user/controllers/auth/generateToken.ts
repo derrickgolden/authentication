@@ -1,9 +1,14 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
 
-function generateAuthToken(user_id, first_name, last_name, email, expiresInDays) {
+export interface TokenResponse{
+  token: string, exp_date: Date
+}
+
+export function generateAuthToken(user_id: number, first_name: string, last_name: string, 
+  email: string, expiresInDays: number): TokenResponse {
   // Calculate the expiration date based on the provided expiresInDays
-  const exp_date = new Date();
+  const exp_date: Date = new Date();
   exp_date.setDate(exp_date.getDate() + expiresInDays);
   console.log(exp_date)
 
@@ -21,6 +26,4 @@ function generateAuthToken(user_id, first_name, last_name, email, expiresInDays)
   return { token, exp_date };
 }
 
-module.exports = {
-    generateAuthToken,
-}
+

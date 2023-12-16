@@ -5,13 +5,14 @@ import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from "react-router-dom";
 import { left_arrow, logo, show_hide } from '../../../assets/images';
 import { setUserDetails } from '../../../redux/userDetails';
+import { server_baseurl } from '../../baseUrl';
 
 interface PersonDetails{
     email: string,
     password: string,
 }
 
-const Login: React.FC <{loginType: "admin" | "user"}> = ({loginType}) =>{
+const Login: React.FC = () =>{
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
@@ -28,9 +29,8 @@ const Login: React.FC <{loginType: "admin" | "user"}> = ({loginType}) =>{
         
         // console.log(loginDetails);
         let data = JSON.stringify(loginDetails);
-        const login = loginType === "admin"? "loginadmin" : "login"
 
-        fetch(`http://localhost:5000/user/${login}`, {
+        fetch(`${server_baseurl}/user/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -41,17 +41,10 @@ const Login: React.FC <{loginType: "admin" | "user"}> = ({loginType}) =>{
         .then(data => {
             console.log("login successful");
             if(data.success){
-                if(loginType === "user"){
-                    sessionStorage.setItem("user", JSON.stringify(data?.details[0]));
-                    sessionStorage.setItem("userToken", JSON.stringify(data?.token));
-                    dispatch(setUserDetails(data?.details[0]));
-                    navigate('/user/dashboard', {replace: true});
-                }else if(loginType === "admin"){
-                    // sessionStorage.setItem("admin", JSON.stringify(data?.details[0]));
-                    sessionStorage.setItem("adminToken", JSON.stringify(data?.token));
-                    // dispatch(setUserDetails(data?.details[0]));
-                    navigate('/admin/dashboard', {replace: true});
-                }
+                sessionStorage.setItem("user", JSON.stringify(data?.details[0]));
+                sessionStorage.setItem("userToken", JSON.stringify(data?.token));
+                dispatch(setUserDetails(data?.details[0]));
+                navigate('/user/dashboard', {replace: true});
             }else{
                 return alert(data.msg)
             }

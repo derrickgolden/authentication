@@ -6,12 +6,13 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { forgot_password_illus, forgot_pwd_2_illus, left_arrow, logo, show_hide } 
     from "../../../assets/images"
 import { PersonDetails } from './types';
+import { server_baseurl } from '../../baseUrl';
 
 const ResetPassword: React.FC = () =>{
     const navigate = useNavigate()
-    const {token} = useParams()
+    const {urltoken} = useParams()
 
-    console.log(token)
+    console.log(urltoken)
 
     const [signupDetails, setSignupDetails] = useState<PersonDetails>({
         email:"", password: "", confirm_password: ""
@@ -36,10 +37,10 @@ const ResetPassword: React.FC = () =>{
         let config = {
             method: 'PATCH',
             maxBodyLength: Infinity,
-            url: 'http://localhost:5000/user/reset-password',
+            url: `${server_baseurl}/user/reset-password`,
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': token
+                'Authorization': urltoken
             },
             data : data
         };
@@ -53,7 +54,7 @@ const ResetPassword: React.FC = () =>{
         .catch((error) => {
             console.log(error.response.data);
             setSignupDetails((obj) =>({email:"", password: "", confirm_password: ""}))
-            alert(`Error: ${error.response.data}`)
+            alert(`Error: ${error.response.data.msg}`)
         });
     }
     return(

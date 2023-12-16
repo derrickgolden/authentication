@@ -1,8 +1,19 @@
-const { pool } = require("./mysqlSetup");
+import { DBServicesRes, LinkTokenRes, LoginMysqlRes, 
+    LoginResponse, SignupResponse } from "user/type";
+import { RowDataPacket } from 'mysql2/promise';
 
-const signupUser = async (first_name, last_name, email, remember_me, country, hash, phone) => {
+const { pool } = require("../../mysqlSetup");
+
+export interface StoreLinkTokenRes extends DBServicesRes{
+    details?:[{
+        link_tokens_id: number, user_id: number, email: string
+    }]
+}
+
+const signupUser = async ( first_name: string, last_name: string, email: string, 
+    remember_me: boolean, country: string, hash: string, phone: string ): Promise<SignupResponse> => {
     try {
-        const connection = await pool.getConnection();
+        const connection: RowDataPacket = await pool.getConnection();
 
         // Check if the user already exists
         const [existingUser] = await connection.query(`
@@ -21,7 +32,7 @@ const signupUser = async (first_name, last_name, email, remember_me, country, ha
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `, [first_name, last_name, email, remember_me, country, hash, phone]);
 
-        const userId = insertUser.insertId;
+        const userId: number = insertUser.insertId;
 
         // If nonuser transfers exist, transfer funds
         const [nonuserTransfers] = await connection.query(`
@@ -86,11 +97,11 @@ const signupUser = async (first_name, last_name, email, remember_me, country, ha
     }
 };
 
-const loginUser = async(email, ) => {
+const loginUser = async(email: string, ): Promise<LoginResponse> => {
     try {
-        const connection = await pool.getConnection();
+        const connection: RowDataPacket = await pool.getConnection();
 
-        const [res] = await connection.query(`
+        const [res]: [Array<LoginMysqlRes>] = await connection.query(`
         SELECT user_details.*, transaction_totals.total_deposit, transaction_totals.total_withdraw, transaction_totals.balance
         FROM user_details
         LEFT JOIN transaction_totals ON user_details.user_id = transaction_totals.user_id
@@ -98,7 +109,7 @@ const loginUser = async(email, ) => {
         `, [email]);
 
         connection.release();
-        console.log(res);
+
         if(res.length === 1){
             const {user_id, first_name, last_name, email, remember_me, country, password, 
                 total_deposit, total_withdraw, balance} = res[0]
@@ -116,60 +127,25 @@ const loginUser = async(email, ) => {
             return {userAvailable: false,
                 res:{success: false,  msg: error.sqlMessage} };
           } else {
-            console.error('Error:', error.message);
             return {userAvailable: false,
                 res:{success: false, msg: error.message }};
         }
     }
 }
 
-const loginAdmin = async(email, ) => {
+const resetPassword = async(password:string, email: string
+                        ): Promise<DBServicesRes> =>{
     try {
-        const connection = await pool.getConnection();
+        const connection: RowDataPacket = await pool.getConnection();
 
-        const [res] = await connection.query(`
-        SELECT * FROM admin_details
-        WHERE email = ?
-        `, [email]);
-
-        connection.release();
-        console.log(res);
-        if(res.length === 1){
-            const {admin_id, first_name, last_name, email, password, balance} = res[0]
-                
-            return {userAvailable: true, passwordHash: password,
-                details: [{admin_id, first_name, last_name, email, balance}]
-            };
-        }else{
-            return {userAvailable: false}
-        }
-    } catch (error) {
-        console.log(error)
-        if (error.sqlMessage) {
-            return {userAvailable: false,
-                res:{success: false,  msg: error.sqlMessage} };
-          } else {
-            console.error('Error:', error.message);
-            return {userAvailable: false,
-                res:{success: false, msg: error.message }};
-        }
-    }
-}
-
-const resetPassword = async(password, email) =>{
-    try {
-        const connection = await pool.getConnection();
-
-        const [res] = await connection.query(`
+        const [res]: [{affectedRows: number}] = await connection.query(`
         UPDATE user_details 
         SET password = ?
         WHERE email = ?;
         `, [password, email])
 
         connection.release();
-
-        console.log("response", res)
-
+        
         if(res.affectedRows === 1){
             return {success: true, msg: "pasword update successful"}
         }else{
@@ -187,12 +163,13 @@ const resetPassword = async(password, email) =>{
     }
 }
 
-const storeLinkToken = async(user_id, email, token,) => {
+const storeLinkToken = async( user_id: number, email: string, token: string
+                        ): Promise<StoreLinkTokenRes> => {
 
     try {
-        const connection = await pool.getConnection();
+        const connection: RowDataPacket = await pool.getConnection();
 
-        const [res] = await connection.query(`
+        const [res]: [{insertId: number}] = await connection.query(`
         INSERT INTO link_tokens (user_id, email, token)
         VALUES (?, ?, ?)
         `, [user_id, email, token,]);
@@ -200,7 +177,7 @@ const storeLinkToken = async(user_id, email, token,) => {
         connection.release();
 
         console.log(res)
-        return {success: true, 
+        return {success: true, msg: "",
             details: [{link_tokens_id:res.insertId, user_id, email}]
         };
     } catch (error) {
@@ -215,38 +192,37 @@ const storeLinkToken = async(user_id, email, token,) => {
     }
 }
 
-const getLinkToken = async(token ) => {
+const getLinkToken = async(token: string ): Promise<LinkTokenRes> => {
     try {
-        const connection = await pool.getConnection();
+        const connection: RowDataPacket = await pool.getConnection();
 
-        const [res] = await connection.query(`
+        const [res]:[Array<
+            {user_id: number, email: string, token: string, create_time: Date}
+            >] = await connection.query(`
         SELECT * FROM link_tokens
         WHERE token = ?
         `, [token]);
 
         connection.release();
         
-        const {user_id, email, token: storedToken, create_time} = res[0]
-        console.log(res);
-        if(res.length === 1 && token === storedToken){
+        if(res.length === 1 && token === res[0].token){
+            const {user_id, email, create_time} = res[0]
+
             const currentDateTime = create_time;
             currentDateTime.setHours(currentDateTime.getHours() + 3);
             if(currentDateTime < new Date()){
                 return {success: false, msg: "Link Expired"}
             }   
-            return {success: true, email, user_id};
+            return {success: true, email, user_id, msg: ""};
         }else{
             return {success: false, msg: "Link Invalid"}
         }
     } catch (error) {
         console.log(error)
         if (error.sqlMessage) {
-            return {userAvailable: false,
-                res:{success: false,  msg: error.sqlMessage} };
+            return {success: false,  msg: error.sqlMessage };
           } else {
-            console.error('Error:', error.message);
-            return {userAvailable: false,
-                res:{success: false, msg: error.message }};
+            return {success: false, msg: error.message };
         }
     }
 }
@@ -254,7 +230,7 @@ const getLinkToken = async(token ) => {
 module.exports = {
     signupUser,
     loginUser,
-    loginAdmin,
+    // loginAdmin,
     resetPassword,
     storeLinkToken,
     getLinkToken,

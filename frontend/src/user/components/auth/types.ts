@@ -8,7 +8,7 @@ export interface SignupDetails{
     first_name: string, 
     email: string, 
     remember_me: boolean, 
-    country: any, 
+    country: string, 
     password: string, 
     phone: string
 }
