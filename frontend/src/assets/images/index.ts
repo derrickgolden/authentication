@@ -5,6 +5,9 @@ import register_illus from "./register-illus.png"
 import forgot_password_illus from "./forgot-password-illus.png"
 import forgot_pwd_2_illus from "./forgot-pwd-2-illus.png"
 
+import google from "./google.png"
+import fb from "./fb.png"
+
 export {
     logo,
     left_arrow,
@@ -12,4 +15,6 @@ export {
     register_illus,
     forgot_password_illus,
     forgot_pwd_2_illus,
+    google,
+    fb,
 }

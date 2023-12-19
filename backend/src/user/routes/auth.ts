@@ -1,6 +1,7 @@
 import express, {Request, Response} from 'express';
 import { TokenResponse } from '../controllers/auth/generateToken';
-import {  LinkTokenRes, LoginResponse, PersonDetails, SignupDetails, SignupResponse } from 'user/type';
+import {  GoogleUserProfile, LinkTokenRes, LoginResponse, 
+    PersonDetails, SignupDetails, SignupResponse } from 'user/type';
 
 var bcrypt = require('bcryptjs');
 const router = express.Router();
@@ -20,12 +21,26 @@ const { sendEmail } = require('../controllers/auth/sendEmail');
 const { generateResetPasswordLink } = require('../controllers/auth/genResetPassLink');
 
 router.post('/signup', async (req: Request, res: Response): Promise<void> =>{
-    const { first_name, last_name, email, remember_me, country,
-        password, phone }: SignupDetails = req.body;
-    try{
+    const {signup_with} = req.body;
+    
+    if(signup_with === "app"){
+        const { first_name, last_name, email, remember_me, country,
+            password, phone }: SignupDetails = req.body;
+
         const hash = await bcrypt.hash(password, 10);
-        const response:SignupResponse = await signupUser(first_name, last_name, email, remember_me, country,
-            hash, phone)
+        var response:SignupResponse = await signupUser({first_name, last_name, 
+            email, remember_me, country, hash, phone}, signup_with);
+
+    }else if(signup_with === "google"){
+        const { name, email, id, picture }: GoogleUserProfile = req.body;
+        const {first_name, last_name} = separateName(name)
+
+        var response:SignupResponse = await signupUser({first_name, last_name, 
+            email, id, picture}, signup_with )    
+    } 
+
+    try{
+
         response.success ? 
             res.status(200).json(response) : 
             res.status(302).json(response)
@@ -35,7 +50,7 @@ router.post('/signup', async (req: Request, res: Response): Promise<void> =>{
 });
 
 router.post('/login', async (req: Request, res: Response): Promise<void> =>{
-    const { email, password}: PersonDetails = req.body;
+    const { email, password, auth_with}: PersonDetails = req.body;
 
     const response: LoginResponse = await loginUser(email);
     const { passwordHash, userAvailable, details } = response;
@@ -46,17 +61,20 @@ router.post('/login', async (req: Request, res: Response): Promise<void> =>{
             return;
         }
 
+        // generate JWT token
+        const expiresInDays: number = 1;
+        const {user_id, first_name, last_name, email} = details[0];
+        const { token, exp_date }: TokenResponse = await generateAuthToken(
+            user_id, first_name, last_name, email, expiresInDays
+        );
+
+        if(auth_with === "google"){
+            res.status(200).send({success: true, token, msg: "User Found", details}) ;
+            return; 
+        }
+
         const match: boolean = await bcrypt.compare(password, passwordHash);
         if(match) {
-            // Create a JWT token
-            const {user_id, first_name, last_name, email} = details[0];
-            
-            const expiresInDays: number = 1;
-
-            const { token, exp_date }: TokenResponse = await generateAuthToken(
-                user_id, first_name, last_name, email, expiresInDays
-            );
-            
             res.status(200).send({success: true, token, msg: "User Found", details}) ;
             
         }else{
@@ -127,5 +145,17 @@ router.post('/forgot-password', async(req: Request, res: Response): Promise<void
         res.status(400).send({success: false, msg: "serverside error", error: error.message})
     }
 });
+
+const separateName = (name: string) =>{
+    const match = name.match(/^(\S+)\s+(\S+)$/);
+
+    if (match) {
+        const first_name = match[1];
+        const last_name = match[2]; 
+        return {first_name, last_name}
+    } else {
+        return {first_name: name, last_name: ""}
+    }
+}
 
 export default router;

@@ -1,27 +1,56 @@
 import axios from 'axios';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
-import { left_arrow, register_illus, show_hide, logo } from '../../../assets/images';
+import { left_arrow, register_illus, show_hide, logo, google, fb } from '../../../assets/images';
 
 import { countries as countriesList } from 'countries-list'
-import { CountriesData, SignupDetails } from './types';
+import { CountriesData, GoogleUser, GoogleUserProfile, SignupDetails } from './types';
+import { server_baseurl } from '../../../baseUrl';
+
+import { useGoogleLogin  } from '@react-oauth/google';
+import { googleSignup } from './controllers/googleAuth';
+// import { GoogleLoginResponse, GoogleLoginResponseOffline } from 'react-google-login';
 
 const countries: CountriesData = countriesList;
 
 const Signup = () =>{
     const navigate = useNavigate()
 
+    const [ user, setUser ] = useState<{} | GoogleUser>({});
+    const [ profile, setProfile ] = useState<GoogleUserProfile | null>(null);
+
+    const login = useGoogleLogin({
+        onSuccess: (codeResponse) => {
+            console.log(codeResponse);
+            
+            setUser(codeResponse)
+        },
+        onError: (error) => console.log('Login Failed:', error)
+    });
+
+    // google signup
+    useEffect(() => {
+        if ('access_token' in user) {
+            googleSignup({user, setProfile, navigate, auth: "signup"})
+        }
+    },[ user ]);
+
     const [signupDetails, setSignupDetails] = useState<SignupDetails>({
-        last_name: "", first_name:"",email:"", remember_me: false, country: "US", password: "", phone:""
+        last_name: "", first_name:"",email:"", remember_me: false, 
+        country: "US", password: "", phone:""
     })
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>{
-        console.log(e)
         const name = e.target.name
         const value = e.target.value
-        console.log(name, value);
-        setSignupDetails((obj) =>({...obj, [name]: value}))
-        console.log(signupDetails);
+        console.log(value);
+        
+        if(name !== "remember_me"){
+            setSignupDetails((obj) =>({...obj, [name]: value}))
+        }else{
+            setSignupDetails((obj) =>({...obj, [name]: !obj.remember_me}))
+        }
     }
 
     const [showPassword, setShowPassword] = useState(false);
@@ -30,17 +59,18 @@ const Signup = () =>{
         setShowPassword(!showPassword);
     };
 
+    // normal signup
     const handleSignupDetailsSubmit = (e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault()
         
         console.log(signupDetails);
         const phone = "+" + countries[signupDetails.country].phone + signupDetails.phone
-        let data = JSON.stringify({...signupDetails, phone});
+        let data = JSON.stringify({...signupDetails, phone, auth_with: "app"});
 
         let config = {
             method: 'post',
             maxBodyLength: Infinity,
-            url: 'http://localhost:5000/user/signup',
+            url: `${server_baseurl}/user/signup`,
             headers: { 
                 'Content-Type': 'application/json'
             },
@@ -55,17 +85,15 @@ const Signup = () =>{
             }else{
                 alert(response.data.msg)
             }
-            // return redirect('user/login')
         })
         .catch((error) => {
             console.log(error);
             alert("Server side error")
-            // setSignupDetails((obj) =>({...obj, password: ""}))
         });
     }
     return(
         <section className="log-reg register land-pg">
-        <div className="overlay pb-120">
+        <div className="overlay pb-120" style={{width: "100%", margin: 'auto', textAlign: "center"}} >
             <div className="container">
                 <div className="top-head-area">
                     <div className="row d-flex align-items-center">
@@ -139,7 +167,8 @@ const Signup = () =>{
 
                                         <div className="row">
                                             <div className="col-12">
-                                                <div className="single-input d-flex align-items-center">
+                                                <div className="single-input d-flex align-items-center"
+                                                style={{display: "flex"}}>
                                                     <span style={{paddingRight: "5px"}}>+{countries[signupDetails.country].phone}</span>
                                                     <input onChange={handleInputChange} required
                                                     type="number" name="phone" className="phoneInput" placeholder="Phone Number">
@@ -153,19 +182,20 @@ const Signup = () =>{
                                                 </div>
                                             </div>
                                             <div className="col-12">
-                                                <div className="single-input d-flex align-items-center">
+                                                <div className="single-input d-flex align-items-center"
+                                                style={{display: "flex"}}>
                                                     <input onChange={handleInputChange} required
                                                     type={showPassword ? 'text' : 'password'}
-                                                     name="password" className="passInput" placeholder="Password"/>
+                                                        name="password" className="passInput" placeholder="Password"/>
                                                     <img onClick={toggleShowPassword}
                                                         className="showPass" src={show_hide} alt="image"/>
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="remember-forgot d-flex justify-content-between">                                          
-                                            <div className="form-group d-flex">
-                                                <div className="checkbox_wrapper" >
-                                                    <input onChange={handleInputChange} name='remember_me'
+                                            <div className="form-group d-flex" style={{display: "flex"}}>
+                                                <div >
+                                                    <input onChange={handleInputChange} name='remember_me' 
                                                     checked = {signupDetails.remember_me} className="check-box" id="check1" type="checkbox"/>
                                                     <label></label>
                                                 </div>
@@ -182,9 +212,12 @@ const Signup = () =>{
                                     </form>
                                     <div className="bottom-area">
                                         <div className="continue"><p>Or continue with</p></div>
-                                        <div className="login-with d-flex align-items-center">
-                                            <Link to="#"><img src="assets/img/google.png" alt="image"/></Link>
-                                            <Link to="#"><img src="assets/img/fb.png" alt="image"/></Link>
+                                        <div className="login-with d-flex align-items-center" 
+                                            style={{display: "flex", alignItems: "center"}}>
+                                            <Link to="#" onClick={() => login()}>
+                                                <img src={google} alt="image"/>
+                                            </Link>
+                                            <Link to="#"><img src={fb} alt="image"/></Link>
                                         </div>
                                     </div>
                                     <div className="privacy">

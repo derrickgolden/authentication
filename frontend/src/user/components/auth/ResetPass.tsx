@@ -6,7 +6,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { forgot_password_illus, forgot_pwd_2_illus, left_arrow, logo, show_hide } 
     from "../../../assets/images"
 import { PersonDetails } from './types';
-import { server_baseurl } from '../../baseUrl';
+import { server_baseurl } from '../../../baseUrl';
 
 const ResetPassword: React.FC = () =>{
     const navigate = useNavigate()

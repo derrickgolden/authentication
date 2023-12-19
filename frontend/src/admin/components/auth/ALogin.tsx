@@ -1,62 +1,36 @@
 import axios from 'axios';
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch } from 'react-redux';
 
 import { Link, useNavigate } from "react-router-dom";
-import { fb, google, left_arrow, logo, show_hide } from '../../../assets/images';
+import { left_arrow, logo, show_hide } from '../../../assets/images';
 import { setUserDetails } from '../../../redux/userDetails';
-import { client_baseurl, server_baseurl } from '../../../baseUrl';
-import { GoogleUser, GoogleUserProfile } from './types';
-import { useGoogleLogin } from '@react-oauth/google';
-import { googleSignup } from './controllers/googleAuth';
+import { server_baseurl } from '../../../baseUrl';
 
-interface PersonDetails{ email: string; password: string; acc_type: string }
-type UserAcc = "personal" | "business";
+interface PersonDetails{
+    email: string,
+    password: string,
+}
 
-const Login: React.FC = () =>{
+const ALogin: React.FC = () =>{
     const dispatch = useDispatch()
     const navigate = useNavigate()
-    const [ user, setUser ] = useState<{} | GoogleUser>({});
-    const [ profile, setProfile ] = useState<GoogleUserProfile | null>(null);
 
-    const login = useGoogleLogin({
-        onSuccess: (codeResponse) => {
-            console.log(codeResponse);
-            
-            setUser(codeResponse)
-        },
-        onError: (error: any) => console.log('Login Failed:', error)
-    });
-
-    // google signin
-    useEffect(() => {
-        if ('access_token' in user) {
-            googleSignup({user, setProfile, navigate, auth: "login"})
-        }
-    },[ user ]);
-
-    const [acc_type, setAcc_type] =  useState<UserAcc>("personal");
     const [loginDetails, setLoginDetails] = useState<PersonDetails>({
-        email:"", password: "", acc_type
+        email:"", password: "",
     })
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>{
         const name = e.target.name
         const value = e.target.value
         setLoginDetails((obj) =>({...obj, [name]: value}))
     }
-
-    useEffect(()=>{
-        setLoginDetails((obj) => ({...obj, acc_type}));
-    }, [acc_type]);
-    
     const handleLoginDetailsSubmit = (e: React.FormEvent<HTMLFormElement>) =>{
         e.preventDefault()
         
         // console.log(loginDetails);
-        let data = JSON.stringify({...loginDetails, auth_with: "app"});
+        let data = JSON.stringify(loginDetails);
 
-        fetch(`${server_baseurl}/user/login`, {
+        fetch(`${server_baseurl}/admin/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -81,9 +55,8 @@ const Login: React.FC = () =>{
             alert("Sorry, something went wrong")
         });
     }
-
     return(
-    <section className="log-reg land-pg">
+        <section className="log-reg land-pg">
         <div className="overlay pb-120">
             <div className="container">
                 <div className="top-head-area">
@@ -105,30 +78,14 @@ const Login: React.FC = () =>{
                     <div className="col-lg-6 text-center">
                         <div className="form-box">
                             <h4>Log in to World Wire Pay</h4>
-                            <p className="dont-acc">Don't have an account? 
-                                <Link to={`${client_baseurl}/user/signup`}>Register</Link>
-                            </p>
-                            <ul className="nav nav-tabs" id="myTab" role="tablist">
-                                <li className="nav-item" role="presentation">
-                                    <button onClick={() => setAcc_type("personal")}
-                                    className={`nav-link ${acc_type === "personal"? "active ": ""}`} id="personal-tab" 
-                                        type="button" role="tab" aria-selected="true">Personal</button>
-                                </li>
-                                <li className="nav-item" role="presentation">
-                                    <button onClick={() => setAcc_type("business")}
-                                    className={`nav-link ${acc_type === "personal"? " ": "active "}`} id="business-tab" 
-                                        type="button" role="tab" aria-selected="false">Business</button>
-                                </li>
-                            </ul>
                             <div className="tab-content" id="myTabContent">
-                                <div className="tab-pane fade show active" id="personal" role="tabpanel" 
-                                aria-labelledby="personal-tab">                                
+                                <div className="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">                                
                                     <form onSubmit={handleLoginDetailsSubmit} action="#">
                                         <div className="row">
                                             <div className="col-12">
                                                 <div className="single-input d-flex align-items-center">
-                                                    <input onChange={handleInputChange} name='email' type="email" 
-                                                    placeholder={acc_type === "personal"? "Email": "Business Email"}/>
+                                                    <input onChange={handleInputChange} name='email'
+                                                    type="email" placeholder="Email"/>
                                                 </div>
                                             </div>
                                             <div className="col-12">
@@ -142,20 +99,7 @@ const Login: React.FC = () =>{
                                         <div className="btn-area">
                                             <button type='submit' className="cmn-btn">Log in</button>
                                         </div>
-                                    </form>
-                                    <div className="form-bottom">
-                                        <div className="continue"><p>Or continue with</p></div>
-                                        <div className="login-with d-flex align-items-center">
-                                            <a onClick={() => login()}
-                                            href="#"><img src={google} alt="image"/></a>
-                                            <a href="#"><img src={fb} alt="image"/></a>
-                                        </div>
-                                        <div className="forget-pw">
-                                            <Link to='http://localhost:5173/user/forgot-password'>
-                                                Forgot your password?
-                                            </Link>
-                                        </div>
-                                    </div>
+                                    </form>    
                                 </div>
                             </div>
                         </div>
@@ -167,4 +111,4 @@ const Login: React.FC = () =>{
     )
 }
 
-export default Login;
+export default ALogin;

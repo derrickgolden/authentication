@@ -1,5 +1,5 @@
-import { DBServicesRes, LinkTokenRes, LoginMysqlRes, 
-    LoginResponse, SignupResponse } from "user/type";
+import { DBServicesRes, GoogleUserProfile, LinkTokenRes, LoginMysqlRes, 
+    LoginResponse, SignupDetails, SignupResponse } from "user/type";
 import { RowDataPacket } from 'mysql2/promise';
 
 const { pool } = require("../../mysqlSetup");
@@ -10,10 +10,18 @@ export interface StoreLinkTokenRes extends DBServicesRes{
     }]
 }
 
-const signupUser = async ( first_name: string, last_name: string, email: string, 
-    remember_me: boolean, country: string, hash: string, phone: string ): Promise<SignupResponse> => {
+interface GoogleUserProfileAdd extends GoogleUserProfile{
+    last_name: string,
+    first_name: string
+}
+
+const signupUser = async (signupDetails: SignupDetails | GoogleUserProfileAdd, 
+    signup_with: string): Promise<SignupResponse> => {
+
+    const {email} = signupDetails;
     try {
         const connection: RowDataPacket = await pool.getConnection();
+        console.log(signup_with);
 
         // Check if the user already exists
         const [existingUser] = await connection.query(`
@@ -27,59 +35,25 @@ const signupUser = async ( first_name: string, last_name: string, email: string,
         }
 
         // Insert user details
-        const [insertUser] = await connection.query(`
-            INSERT INTO user_details (first_name, last_name, email, remember_me, country, password, phone)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, [first_name, last_name, email, remember_me, country, hash, phone]);
+        if(signup_with === "app" && "phone" in signupDetails){
+            var {first_name, last_name, remember_me, country, hash, phone} = signupDetails
+            var [insertUser] = await connection.query(`
+                INSERT INTO user_details (first_name, last_name, email, remember_me, country, password, phone)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            `, [first_name, last_name, email, remember_me, country, hash, phone]);
 
-        const userId: number = insertUser.insertId;
-
-        // If nonuser transfers exist, transfer funds
-        const [nonuserTransfers] = await connection.query(`
-            SELECT * FROM nonuser_transfers
-            WHERE recipient_email = ?
-        `, [email]);
-
-        if (nonuserTransfers.length > 0) {
-            await connection.beginTransaction();
-
-            try {
-                for (const nonuserTransfer of nonuserTransfers) {
-                    const { transfer_id, timestamp, sender_id, recipient_email, amount } = nonuserTransfer;
-
-                    // Insert into transfers
-                    const [transferRes] = await connection.query(`
-                        INSERT INTO transfers(sender_id, receiver_id, recipient_email, amount, timestamp)
-                        VALUES (?, ?, ?, ?, ?)
-                    `, [sender_id, userId, recipient_email, amount, timestamp]);
-
-                    const new_transfer_id = transferRes.insertId;
-
-                    // Update nonuser_transfers
-                    await connection.query(`
-                        UPDATE nonuser_transfers
-                        SET status = ?, new_transfer_id = ?
-                        WHERE transfer_id = ?
-                    `, ["registered", new_transfer_id, transfer_id ]);
-                }
-
-                await connection.commit();
-            } catch (error) {
-                await connection.rollback();
-                console.error('Transaction failed. Rolling back...', error);
-                return {
-                    success: true,
-                    admin_id: userId,
-                    msg: "Registration successful, but failed to transfer money. Contact Customer Care for help.",
-                    details: [{ first_name, last_name, email, remember_me, country }]
-                };
-            } finally {
-                connection.release();
-            }
-        } else {
-            connection.release();
+        }else if(signup_with === "google" && "picture" in signupDetails){
+            console.log("Inserting with google");
+            var {first_name, last_name, picture, id} = signupDetails;
+            var [insertUser] = await connection.query(`
+                INSERT INTO user_details (first_name, last_name, email, picture, google_id)
+                VALUES (?, ?, ?, ?, ?)
+            `, [first_name, last_name, email, picture, id]);
         }
 
+        connection.release();
+
+        const userId: number = insertUser.insertId;
         return {
             success: true,
             admin_id: userId,
@@ -102,21 +76,19 @@ const loginUser = async(email: string, ): Promise<LoginResponse> => {
         const connection: RowDataPacket = await pool.getConnection();
 
         const [res]: [Array<LoginMysqlRes>] = await connection.query(`
-        SELECT user_details.*, transaction_totals.total_deposit, transaction_totals.total_withdraw, transaction_totals.balance
-        FROM user_details
-        LEFT JOIN transaction_totals ON user_details.user_id = transaction_totals.user_id
-        WHERE email = ?
+            SELECT * FROM user_details
+            WHERE email = ?
         `, [email]);
 
         connection.release();
 
         if(res.length === 1){
             const {user_id, first_name, last_name, email, remember_me, country, password, 
-                total_deposit, total_withdraw, balance} = res[0]
+                total_deposit, total_withdraw, balance, picture} = res[0]
                 
             return {userAvailable: true, passwordHash: password,
                 details: [{user_id, first_name, last_name, email, remember_me, country, 
-                    total_deposit, total_withdraw, balance}]
+                    total_deposit, total_withdraw, balance, picture}]
             };
         }else{
             return {userAvailable: false}

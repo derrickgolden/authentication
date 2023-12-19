@@ -1,6 +1,6 @@
 const { pool } = require("../../mysqlSetup");
 import { RowDataPacket } from 'mysql2/promise';
-import { DBServicesRes, LoginMysqlRes } from 'user/type';
+import { DBServicesRes } from 'user/type';
 
 export interface UserDetailsRes extends DBServicesRes{
     details?: Array<{}>
