@@ -16,12 +16,12 @@ interface GoogleUserProfileAdd extends GoogleUserProfile{
 }
 
 const signupUser = async (signupDetails: SignupDetails | GoogleUserProfileAdd, 
-    signup_with: string): Promise<SignupResponse> => {
+    auth_with: string): Promise<SignupResponse> => {
 
     const {email} = signupDetails;
     try {
         const connection: RowDataPacket = await pool.getConnection();
-        console.log(signup_with);
+        console.log(auth_with);
 
         // Check if the user already exists
         const [existingUser] = await connection.query(`
@@ -35,14 +35,14 @@ const signupUser = async (signupDetails: SignupDetails | GoogleUserProfileAdd,
         }
 
         // Insert user details
-        if(signup_with === "app" && "phone" in signupDetails){
+        if(auth_with === "app" && "phone" in signupDetails){
             var {first_name, last_name, remember_me, country, hash, phone} = signupDetails
             var [insertUser] = await connection.query(`
                 INSERT INTO user_details (first_name, last_name, email, remember_me, country, password, phone)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             `, [first_name, last_name, email, remember_me, country, hash, phone]);
 
-        }else if(signup_with === "google" && "picture" in signupDetails){
+        }else if(auth_with === "google" && "picture" in signupDetails){
             console.log("Inserting with google");
             var {first_name, last_name, picture, id} = signupDetails;
             var [insertUser] = await connection.query(`

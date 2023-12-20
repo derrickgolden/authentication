@@ -21,22 +21,23 @@ const { sendEmail } = require('../controllers/auth/sendEmail');
 const { generateResetPasswordLink } = require('../controllers/auth/genResetPassLink');
 
 router.post('/signup', async (req: Request, res: Response): Promise<void> =>{
-    const {signup_with} = req.body;
+    const {auth_with} = req.body;
+    console.log(req.body);
     
-    if(signup_with === "app"){
+    if(auth_with === "app"){
         const { first_name, last_name, email, remember_me, country,
             password, phone }: SignupDetails = req.body;
 
         const hash = await bcrypt.hash(password, 10);
         var response:SignupResponse = await signupUser({first_name, last_name, 
-            email, remember_me, country, hash, phone}, signup_with);
+            email, remember_me, country, hash, phone}, auth_with);
 
-    }else if(signup_with === "google"){
+    }else if(auth_with === "google"){
         const { name, email, id, picture }: GoogleUserProfile = req.body;
         const {first_name, last_name} = separateName(name)
 
         var response:SignupResponse = await signupUser({first_name, last_name, 
-            email, id, picture}, signup_with )    
+            email, id, picture}, auth_with )    
     } 
 
     try{
